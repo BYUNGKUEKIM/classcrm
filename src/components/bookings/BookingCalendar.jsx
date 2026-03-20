@@ -90,7 +90,7 @@ export default function BookingCalendar({ bookings, onEditBooking, onNewBooking,
                           key={delivery.id}
                           onClick={async () => {
                             if (onEditCustomer && delivery.customerId) {
-                              const { supabase } = await import('@/lib/customSupabaseClient');
+                              const { supabase } = await import('@/lib/firebase');
                               try {
                                 const { data: customer, error } = await supabase
                                   .from('customers')

@@ -7,8 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/lib/customSupabaseClient';
-import { useAuth } from '@/contexts/SupabaseAuthContext';
+import { supabase } from '@/lib/firebase';
+import { useAuth } from '@/contexts/FirebaseAuthContext';
 
 function FilmingTypeDialog({ isOpen, onClose, onSave, filmingType }) {
   const [formData, setFormData] = useState({ name: '', price: '' });

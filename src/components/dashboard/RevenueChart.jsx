@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp } from 'lucide-react';
-import { supabase } from '@/lib/customSupabaseClient';
-import { useAuth } from '@/contexts/SupabaseAuthContext';
+import { supabase } from '@/lib/firebase';
+import { useAuth } from '@/contexts/FirebaseAuthContext';
 import { useNavigate } from 'react-router-dom';
 
 export default function RevenueChart() {

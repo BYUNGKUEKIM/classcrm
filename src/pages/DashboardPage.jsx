@@ -4,8 +4,8 @@ import { Users, Calendar, DollarSign, Package } from 'lucide-react';
 import StatCard from '@/components/dashboard/StatCard';
 import RecentBookings from '@/components/dashboard/RecentBookings';
 import RevenueChart from '@/components/dashboard/RevenueChart';
-import { useAuth } from '@/contexts/SupabaseAuthContext';
-import { supabase } from '@/lib/customSupabaseClient';
+import { useAuth } from '@/contexts/FirebaseAuthContext';
+import { supabase } from '@/lib/firebase';
 import { format } from 'date-fns';
 
 export default function DashboardPage() {

@@ -5,8 +5,8 @@ import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import CustomerCard from '@/components/customers/CustomerCard';
 import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/lib/customSupabaseClient';
-import { useAuth } from '@/contexts/SupabaseAuthContext';
+import { supabase } from '@/lib/firebase';
+import { useAuth } from '@/contexts/FirebaseAuthContext';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 

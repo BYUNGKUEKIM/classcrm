@@ -2,8 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, Clock } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
-import { supabase } from '@/lib/customSupabaseClient';
-import { useAuth } from '@/contexts/SupabaseAuthContext';
+import { supabase } from '@/lib/firebase';
+import { useAuth } from '@/contexts/FirebaseAuthContext';
 import { useNavigate } from 'react-router-dom';
 
 export default function RecentBookings() {

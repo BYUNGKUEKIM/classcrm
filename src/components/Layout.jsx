@@ -7,8 +7,8 @@ import MobileHeader from '@/components/MobileHeader';
 import { Button } from '@/components/ui/button';
 import CustomerDialog from '@/components/customers/CustomerDialog';
 import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/lib/customSupabaseClient';
-import { useAuth } from '@/contexts/SupabaseAuthContext';
+import { supabase } from '@/lib/firebase';
+import { useAuth } from '@/contexts/FirebaseAuthContext';
 
 export const manageTransactions = async (customerId, currentCustomerData, userId, toast) => {
   if (!userId) return;

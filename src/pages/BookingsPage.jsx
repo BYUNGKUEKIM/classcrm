@@ -8,8 +8,8 @@ import BookingMonthlyCalendar from '@/components/bookings/BookingMonthlyCalendar
 import BookingList from '@/components/bookings/BookingList';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/lib/customSupabaseClient';
-import { useAuth } from '@/contexts/SupabaseAuthContext';
+import { supabase } from '@/lib/firebase';
+import { useAuth } from '@/contexts/FirebaseAuthContext';
 
 export default function BookingsPage({ onEditCustomer }) {
   const [bookings, setBookings] = useState([]);

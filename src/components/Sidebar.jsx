@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { Home, Users, Calendar, BarChart2, Package, Settings, Shield, LogOut, X, Plus, Camera } from 'lucide-react';
-import { useAuth } from '@/contexts/SupabaseAuthContext';
+import { useAuth } from '@/contexts/FirebaseAuthContext';
 
 const menuItems = [
   { href: '/dashboard', label: '대시보드', icon: Home },

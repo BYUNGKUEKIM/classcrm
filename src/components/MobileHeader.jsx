@@ -1,6 +1,6 @@
 import React from 'react';
 import { Menu, LogOut } from 'lucide-react';
-import { useAuth } from '@/contexts/SupabaseAuthContext';
+import { useAuth } from '@/contexts/FirebaseAuthContext';
 
 export default function MobileHeader({ profile, setSidebarOpen }) {
   const { signOut } = useAuth();
