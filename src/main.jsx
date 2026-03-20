@@ -1,18 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter as Router } from 'react-router-dom';
-import App from '@/App';
-import { FirebaseAuthProvider as AuthProvider } from '@/contexts/FirebaseAuthContext';
-import { Toaster } from '@/components/ui/toaster';
-import '@/index.css';
+import App from './App';
+import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <>
-    <Router>
-      <AuthProvider>
-        <App />
-        <Toaster />
-      </AuthProvider>
-    </Router>
-  </>
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
 );

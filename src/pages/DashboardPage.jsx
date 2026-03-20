@@ -1,211 +1,115 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Helmet } from 'react-helmet';
-import { 
-  Users, Calendar, DollarSign, TrendingUp, 
-  Camera, Bell, Clock, Star, ArrowUp, ArrowDown,
-  Plus, CheckCircle, AlertCircle, Activity
-} from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/contexts/FirebaseAuthContext';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
-import { format, startOfMonth, subDays } from 'date-fns';
-import { ko } from 'date-fns/locale';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { 
+  Users, 
+  Briefcase, 
+  DollarSign, 
+  Calendar,
+  TrendingUp,
+  Clock,
+  Plus,
+  ArrowRight,
+  CheckCircle,
+  AlertCircle
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export default function DashboardPage() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState({
-    totalCustomers: 0,
-    newCustomers: 0,
-    todayBookings: 0,
-    upcomingBookings: 0,
+    totalLeads: 0,
+    activeJobs: 0,
     monthlyRevenue: 0,
-    revenueGrowth: 0,
-    totalPhotos: 0,
-    pendingSelections: 0
+    upcomingBookings: 0
   });
   const [recentActivity, setRecentActivity] = useState([]);
-  const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const loadDashboardData = useCallback(async () => {
-    if (!user) return;
-    setLoading(true);
-
-    try {
-      const today = new Date();
-      const todayStr = format(today, 'yyyy-MM-dd');
-      const monthStart = startOfMonth(today);
-      const lastMonthStart = startOfMonth(subDays(monthStart, 1));
-
-      // 고객 통계
-      const customersRef = collection(db, 'customers');
-      const customersQuery = query(customersRef, where('userId', '==', user.uid));
-      const customersSnap = await getDocs(customersQuery);
-      
-      const totalCustomers = customersSnap.size;
-      const newCustomers = customersSnap.docs.filter(doc => {
-        const created = doc.data().createdAt?.toDate();
-        return created && created >= monthStart;
-      }).length;
-
-      // 예약 통계 (인덱스 없이)
-      const bookingsRef = collection(db, 'bookings');
-      const simpleBookingsQuery = query(
-        bookingsRef, 
-        where('userId', '==', user.uid)
-      );
-      const bookingsSnap = await getDocs(simpleBookingsQuery);
-      
-      const todayBookings = bookingsSnap.docs.filter(doc => 
-        doc.data().booking_date === todayStr
-      ).length;
-      
-      const upcomingBookings = bookingsSnap.docs.filter(doc =>
-        doc.data().booking_date >= todayStr
-      ).length;
-
-      // 매출 통계 (간단한 쿼리)
-      const transactionsRef = collection(db, 'transactions');
-      const allTransactionsQuery = query(
-        transactionsRef,
-        where('userId', '==', user.uid)
-      );
-      const allTransactionsSnap = await getDocs(allTransactionsQuery);
-      
-      // 클라이언트에서 필터링
-      const monthlyRevenue = allTransactionsSnap.docs
-        .filter(doc => {
-          const data = doc.data();
-          const txDate = data.date?.toDate();
-          return data.type === 'income' && txDate && txDate >= monthStart;
-        })
-        .reduce((sum, doc) => sum + (parseFloat(doc.data().amount) || 0), 0);
-
-      const lastMonthRevenue = allTransactionsSnap.docs
-        .filter(doc => {
-          const data = doc.data();
-          const txDate = data.date?.toDate();
-          return data.type === 'income' && txDate && txDate >= lastMonthStart && txDate < monthStart;
-        })
-        .reduce((sum, doc) => sum + (parseFloat(doc.data().amount) || 0), 0);
-
-      const revenueGrowth = lastMonthRevenue > 0 
-        ? ((monthlyRevenue - lastMonthRevenue) / lastMonthRevenue) * 100 
-        : 0;
-
-      // 최근 활동 (간단한 쿼리)
-      const recentBookingsQuery = query(
-        bookingsRef,
-        where('userId', '==', user.uid),
-        limit(20)
-      );
-      const recentBookingsSnap = await getDocs(recentBookingsQuery);
-      
-      const activities = recentBookingsSnap.docs
-        .sort((a, b) => {
-          const aTime = a.data().createdAt?.toMillis() || 0;
-          const bTime = b.data().createdAt?.toMillis() || 0;
-          return bTime - aTime;
-        })
-        .slice(0, 5)
-        .map(doc => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            type: 'booking',
-            title: `${data.customerName || '고객'}님 예약`,
-            description: `${data.filmingType || '촬영'} - ${data.booking_date}`,
-            time: data.createdAt?.toDate(),
-            icon: Calendar,
-            color: 'blue'
-          };
-        });
-
-      setRecentActivity(activities);
-
-      // 다가오는 이벤트 (클라이언트 필터링)
-      const events = bookingsSnap.docs
-        .filter(doc => doc.data().booking_date >= todayStr)
-        .sort((a, b) => {
-          const aDate = a.data().booking_date || '';
-          const bDate = b.data().booking_date || '';
-          return aDate.localeCompare(bDate);
-        })
-        .slice(0, 5)
-        .map(doc => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            customerName: data.customerName || '고객',
-            date: data.booking_date,
-            time: data.booking_time || '시간 미정',
-            type: data.filmingType || '촬영'
-          };
-        });
-
-      setUpcomingEvents(events);
-
-      setStats({
-        totalCustomers,
-        newCustomers,
-        todayBookings,
-        upcomingBookings,
-        monthlyRevenue,
-        revenueGrowth,
-        totalPhotos: 0, // TODO: 갤러리 연동
-        pendingSelections: 0 // TODO: 고객 선택 대기
-      });
-
-    } catch(error) {
-      console.error("Error loading dashboard:", error);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (user) {
+      loadDashboardData();
     }
   }, [user]);
 
-  useEffect(() => {
-    loadDashboardData();
-  }, [loadDashboardData]);
+  const loadDashboardData = async () => {
+    setLoading(true);
+    try {
+      // Load leads
+      const leadsRef = collection(db, 'leads');
+      const leadsQuery = query(leadsRef, where('userId', '==', user.uid));
+      const leadsSnap = await getDocs(leadsQuery);
+      const totalLeads = leadsSnap.size;
 
-  const StatCard = ({ title, value, change, icon: Icon, color, trend, linkTo }) => {
+      // Load jobs
+      const jobsRef = collection(db, 'jobs');
+      const jobsQuery = query(jobsRef, where('userId', '==', user.uid), where('status', '==', 'active'));
+      const jobsSnap = await getDocs(jobsQuery);
+      const activeJobs = jobsSnap.size;
+
+      // Load payments (this month)
+      const paymentsRef = collection(db, 'payments');
+      const paymentsQuery = query(paymentsRef, where('userId', '==', user.uid));
+      const paymentsSnap = await getDocs(paymentsQuery);
+      
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      
+      const monthlyRevenue = paymentsSnap.docs
+        .filter(doc => {
+          const paymentDate = doc.data().date?.toDate();
+          return paymentDate && paymentDate >= monthStart;
+        })
+        .reduce((sum, doc) => sum + (doc.data().amount || 0), 0);
+
+      // Load upcoming bookings
+      const todayStr = now.toISOString().split('T')[0];
+      const upcomingBookings = jobsSnap.docs.filter(doc => {
+        const shootDate = doc.data().shootDate;
+        return shootDate && shootDate >= todayStr;
+      }).length;
+
+      setStats({
+        totalLeads,
+        activeJobs,
+        monthlyRevenue,
+        upcomingBookings
+      });
+
+    } catch (error) {
+      console.error('Error loading dashboard:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const StatCard = ({ title, value, icon: Icon, color, onClick }) => {
     const colorClasses = {
-      blue: 'bg-blue-50 text-blue-600',
-      green: 'bg-green-50 text-green-600',
-      purple: 'bg-purple-50 text-purple-600',
-      orange: 'bg-orange-50 text-orange-600'
+      blue: 'bg-blue-500',
+      green: 'bg-green-500',
+      purple: 'bg-purple-500',
+      orange: 'bg-orange-500'
     };
 
     return (
       <Card 
-        className="hover:shadow-lg transition-shadow cursor-pointer"
-        onClick={() => linkTo && navigate(linkTo)}
+        className="cursor-pointer hover:shadow-lg transition-all duration-200"
+        onClick={onClick}
       >
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">{title}</p>
-              <h3 className="text-3xl font-bold mt-2">{value}</h3>
-              {change !== undefined && (
-                <div className="flex items-center mt-2">
-                  {trend === 'up' ? (
-                    <ArrowUp className="h-4 w-4 text-green-500 mr-1" />
-                  ) : (
-                    <ArrowDown className="h-4 w-4 text-red-500 mr-1" />
-                  )}
-                  <span className={`text-sm ${trend === 'up' ? 'text-green-500' : 'text-red-500'}`}>
-                    {Math.abs(change).toFixed(1)}%
-                  </span>
-                  <span className="text-sm text-gray-500 ml-1">전월 대비</span>
-                </div>
-              )}
+              <p className="text-sm font-medium text-gray-600 mb-2">{title}</p>
+              <h3 className="text-3xl font-bold text-gray-900">
+                {loading ? '...' : value}
+              </h3>
             </div>
-            <div className={`p-4 rounded-full ${colorClasses[color]}`}>
-              <Icon className="h-6 w-6" />
+            <div className={`p-4 rounded-full ${colorClasses[color]} bg-opacity-10`}>
+              <Icon className={`h-8 w-8 text-${color}-500`} />
             </div>
           </div>
         </CardContent>
@@ -214,223 +118,167 @@ export default function DashboardPage() {
   };
 
   const QuickAction = ({ icon: Icon, label, onClick, color = 'blue' }) => {
-    const colorClasses = {
-      blue: 'bg-blue-500 hover:bg-blue-600',
-      green: 'bg-green-500 hover:bg-green-600',
-      purple: 'bg-purple-500 hover:bg-purple-600'
-    };
-
     return (
       <Button
         onClick={onClick}
-        className={`${colorClasses[color]} text-white flex items-center gap-2`}
+        className={`w-full bg-${color}-600 hover:bg-${color}-700 text-white`}
       >
-        <Icon className="h-4 w-4" />
+        <Icon className="h-4 w-4 mr-2" />
         {label}
       </Button>
     );
   };
 
   return (
-    <>
-      <Helmet>
-        <title>대시보드 - 포토스튜디오 CRM</title>
-        <meta name="description" content="포토스튜디오 고객관리 시스템 대시보드" />
-      </Helmet>
-
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              👋 환영합니다!
-            </h1>
-            <p className="text-gray-600 mt-1">
-              {format(new Date(), 'yyyy년 M월 d일 EEEE', { locale: ko })}
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <QuickAction 
-              icon={Plus} 
-              label="새 예약" 
-              onClick={() => navigate('/bookings')}
-              color="blue"
-            />
-            <QuickAction 
-              icon={Users} 
-              label="고객 추가" 
-              onClick={() => navigate('/customers')}
-              color="green"
-            />
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Welcome back, {profile?.studioName || 'there'}! 👋
+              </h1>
+              <p className="text-gray-600 mt-1">
+                Here's what's happening with your studio today
+              </p>
+            </div>
           </div>
         </div>
+      </div>
 
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatCard 
-            title="총 고객" 
-            value={loading ? '...' : stats.totalCustomers}
-            change={stats.newCustomers}
-            icon={Users} 
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <StatCard
+            title="Total Leads"
+            value={stats.totalLeads}
+            icon={Users}
             color="blue"
-            linkTo="/customers"
+            onClick={() => navigate('/leads')}
           />
-          <StatCard 
-            title="오늘 예약" 
-            value={loading ? '...' : stats.todayBookings}
-            icon={Calendar} 
+          <StatCard
+            title="Active Jobs"
+            value={stats.activeJobs}
+            icon={Briefcase}
             color="green"
-            linkTo="/bookings"
+            onClick={() => navigate('/jobs')}
           />
-          <StatCard 
-            title="이번 달 매출" 
-            value={loading ? '...' : `₩${stats.monthlyRevenue.toLocaleString()}`}
-            change={stats.revenueGrowth}
-            trend={stats.revenueGrowth >= 0 ? 'up' : 'down'}
-            icon={DollarSign} 
+          <StatCard
+            title="Monthly Revenue"
+            value={`₩${stats.monthlyRevenue.toLocaleString()}`}
+            icon={DollarSign}
             color="purple"
-            linkTo="/finance"
+            onClick={() => navigate('/payments')}
           />
-          <StatCard 
-            title="다가오는 예약" 
-            value={loading ? '...' : stats.upcomingBookings}
-            icon={Clock} 
+          <StatCard
+            title="Upcoming Shoots"
+            value={stats.upcomingBookings}
+            icon={Calendar}
             color="orange"
-            linkTo="/bookings"
+            onClick={() => navigate('/jobs')}
           />
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Recent Activity */}
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5" />
-                최근 활동
-              </CardTitle>
-              <CardDescription>최근 예약 및 고객 활동</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="text-center py-8 text-gray-500">로딩 중...</div>
-              ) : recentActivity.length > 0 ? (
-                <div className="space-y-4">
-                  {recentActivity.map((activity) => (
-                    <div 
-                      key={activity.id} 
-                      className="flex items-start gap-4 p-3 hover:bg-gray-50 rounded-lg transition-colors"
-                    >
-                      <div className={`p-2 rounded-full bg-${activity.color}-50`}>
-                        <activity.icon className={`h-4 w-4 text-${activity.color}-600`} />
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-medium">{activity.title}</p>
-                        <p className="text-sm text-gray-600">{activity.description}</p>
-                        <p className="text-xs text-gray-400 mt-1">
-                          {activity.time && format(activity.time, 'M월 d일 HH:mm', { locale: ko })}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  최근 활동이 없습니다.
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        {/* Quick Actions */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <QuickAction
+                icon={Plus}
+                label="New Lead"
+                onClick={() => navigate('/leads?action=new')}
+                color="blue"
+              />
+              <QuickAction
+                icon={Briefcase}
+                label="Create Job"
+                onClick={() => navigate('/jobs?action=new')}
+                color="green"
+              />
+              <QuickAction
+                icon={Users}
+                label="Add Client"
+                onClick={() => navigate('/clients?action=new')}
+                color="purple"
+              />
+              <QuickAction
+                icon={DollarSign}
+                label="Record Payment"
+                onClick={() => navigate('/payments?action=new')}
+                color="orange"
+              />
+            </div>
+          </CardContent>
+        </Card>
 
-          {/* Upcoming Events */}
+        {/* Recent Activity & Upcoming */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Recent Activity */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                다가오는 일정
+              <CardTitle className="flex items-center justify-between">
+                <span>Recent Activity</span>
+                <Button variant="ghost" size="sm" onClick={() => navigate('/activity')}>
+                  View All <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
               </CardTitle>
-              <CardDescription>예정된 촬영</CardDescription>
             </CardHeader>
             <CardContent>
-              {loading ? (
-                <div className="text-center py-8 text-gray-500">로딩 중...</div>
-              ) : upcomingEvents.length > 0 ? (
-                <div className="space-y-3">
-                  {upcomingEvents.map((event) => (
-                    <div 
-                      key={event.id}
-                      className="p-3 border rounded-lg hover:border-blue-300 transition-colors cursor-pointer"
-                      onClick={() => navigate('/bookings')}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium">{event.customerName}</span>
-                        <Badge variant="outline">{event.type}</Badge>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Calendar className="h-3 w-3" />
-                        {event.date}
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Clock className="h-3 w-3" />
-                        {event.time}
+              <div className="space-y-4">
+                {loading ? (
+                  <p className="text-center text-gray-500 py-8">Loading...</p>
+                ) : recentActivity.length > 0 ? (
+                  recentActivity.map((activity, idx) => (
+                    <div key={idx} className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-lg">
+                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                      <div>
+                        <p className="font-medium text-gray-900">{activity.title}</p>
+                        <p className="text-sm text-gray-600">{activity.description}</p>
+                        <p className="text-xs text-gray-400 mt-1">{activity.time}</p>
                       </div>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  예정된 일정이 없습니다.
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Quick Actions Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/gallery')}>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-purple-50 rounded-full">
-                  <Camera className="h-6 w-6 text-purple-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold">갤러리 관리</h3>
-                  <p className="text-sm text-gray-600">사진 업로드 및 관리</p>
-                </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">No recent activity</p>
+                    <p className="text-sm text-gray-400 mt-1">
+                      Start by adding a new lead or job
+                    </p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/finance')}>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-green-50 rounded-full">
-                  <TrendingUp className="h-6 w-6 text-green-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold">재무 리포트</h3>
-                  <p className="text-sm text-gray-600">수입 및 지출 관리</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/settings')}>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-blue-50 rounded-full">
-                  <Star className="h-6 w-6 text-blue-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold">고객 리뷰</h3>
-                  <p className="text-sm text-gray-600">리뷰 및 평가 관리</p>
+          {/* Upcoming Tasks */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span>Upcoming Tasks</span>
+                <Button variant="ghost" size="sm" onClick={() => navigate('/tasks')}>
+                  View All <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="text-center py-8">
+                  <Clock className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500">No upcoming tasks</p>
+                  <p className="text-sm text-gray-400 mt-1">
+                    All clear! You're all caught up
+                  </p>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
       </div>
-    </>
+    </div>
   );
 }

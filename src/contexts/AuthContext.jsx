@@ -1,28 +1,90 @@
-// This file is no longer in use, but we'll keep it to avoid breaking imports if referenced elsewhere unexpectedly.
-// All authentication logic is now handled by SupabaseAuthContext.
-import React, { createContext, useContext } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
+import { 
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut as firebaseSignOut,
+  onAuthStateChanged,
+  sendPasswordResetEmail,
+  updateProfile
+} from 'firebase/auth';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { auth, db } from '../lib/firebase';
 
-const AuthContext = createContext(null);
+const AuthContext = createContext();
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-      // Fallback for components that might still be using this, though they shouldn't be.
-      console.warn("Attempted to use the deprecated AuthContext. Please use SupabaseAuthContext.");
+  if (!context) {
+    throw new Error('useAuth must be used within AuthProvider');
   }
   return context;
 }
 
 export function AuthProvider({ children }) {
-    const value = {
-        user: null,
-        isAuthenticated: false,
-        loading: true,
-        login: () => console.error("Login function from deprecated AuthContext was called."),
-        register: () => console.error("Register function from deprecated AuthContext was called."),
-        logout: () => console.error("Logout function from deprecated AuthContext was called."),
-        updateUser: () => console.error("UpdateUser function from deprecated AuthContext was called."),
-    };
+  const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        setUser(firebaseUser);
+        // Fetch user profile from Firestore
+        const profileDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+        if (profileDoc.exists()) {
+          setProfile(profileDoc.data());
+        }
+      } else {
+        setUser(null);
+        setProfile(null);
+      }
+      setLoading(false);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  const signUp = async (email, password, studioName) => {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+
+    // Create user profile in Firestore
+    await setDoc(doc(db, 'users', user.uid), {
+      email: user.email,
+      studioName: studioName,
+      createdAt: serverTimestamp(),
+      subscription: 'trial',
+      status: 'active'
+    });
+
+    return user;
+  };
+
+  const signIn = async (email, password) => {
+    return await signInWithEmailAndPassword(auth, email, password);
+  };
+
+  const signOut = async () => {
+    return await firebaseSignOut(auth);
+  };
+
+  const resetPassword = async (email) => {
+    return await sendPasswordResetEmail(auth, email);
+  };
+
+  const value = {
+    user,
+    profile,
+    loading,
+    signUp,
+    signIn,
+    signOut,
+    resetPassword
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
