@@ -13,6 +13,7 @@ import FilmingTypesPage from '@/pages/FilmingTypesPage';
 import SettingsPage from '@/pages/SettingsPage';
 import AdminPage from '@/pages/AdminPage';
 import SubscriptionPage from '@/pages/SubscriptionPage';
+import AIGalleryPage from '@/pages/AIGalleryPage';
 import Layout from '@/components/Layout';
 
 function PrivateRoute({ children, adminOnly = false }) {
@@ -100,6 +101,7 @@ function App() {
                   />
                   <Route path="products" element={<ProductsPage />} />
                   <Route path="filming-types" element={<FilmingTypesPage />} />
+                  <Route path="gallery" element={<AIGalleryPage />} />
                   <Route path="settings" element={<SettingsPage />} />
                   <Route path="subscription" element={<SubscriptionPage />} />
                   <Route 
