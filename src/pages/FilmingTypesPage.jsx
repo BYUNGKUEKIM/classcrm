@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/FirebaseAuthContext';
 
 function FilmingTypeDialog({ isOpen, onClose, onSave, filmingType }) {
@@ -118,7 +118,7 @@ export default function FilmingTypesPage() {
   const handleDelete = async (id) => {
     if (window.confirm('정말 삭제하시겠습니까?')) {
       try {
-        const { error } = await supabase.from('filming_types').delete().eq('id', id);
+        const { error } = await db.collection('filming_types').delete().eq('id', id);
         if (error) throw error;
         fetchFilmingTypes();
         toast({ title: "촬영 유형 삭제 완료", variant: "destructive" });

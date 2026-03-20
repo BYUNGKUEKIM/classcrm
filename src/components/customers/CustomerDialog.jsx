@@ -10,7 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { supabase } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/FirebaseAuthContext';
 import { format } from 'date-fns';
 
@@ -201,7 +201,7 @@ export default function CustomerDialog({ isOpen, onClose, onSave, customer, prod
         visitForm.description?.trim() ||
         `${customer?.name || ''} ${filmingType?.name || ''} 촬영`;
 
-      const { error: insertError } = await supabase.from('transactions').insert([
+      const { error: insertError } = await db.collection('transactions').insert([
         {
           user_id: user.id,
           customer_id: customerId,

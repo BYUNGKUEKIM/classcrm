@@ -5,7 +5,7 @@ import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import CustomerCard from '@/components/customers/CustomerCard';
 import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/FirebaseAuthContext';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -109,13 +109,13 @@ export default function CustomersPage({ onEditCustomer }) {
       return;
     }
     try {
-      const { error: transactionError } = await supabase.from('transactions').delete().eq('customer_id', id);
+      const { error: transactionError } = await db.collection('transactions').delete().eq('customer_id', id);
       if (transactionError) throw transactionError;
 
-      const { error: bookingError } = await supabase.from('bookings').delete().eq('customer_id', id);
+      const { error: bookingError } = await db.collection('bookings').delete().eq('customer_id', id);
       if (bookingError) throw bookingError;
 
-      const { error } = await supabase.from('customers').delete().eq('id', id);
+      const { error } = await db.collection('customers').delete().eq('id', id);
       if (error) throw error;
       
       toast({

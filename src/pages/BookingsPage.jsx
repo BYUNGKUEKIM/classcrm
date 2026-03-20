@@ -8,7 +8,7 @@ import BookingMonthlyCalendar from '@/components/bookings/BookingMonthlyCalendar
 import BookingList from '@/components/bookings/BookingList';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/FirebaseAuthContext';
 
 export default function BookingsPage({ onEditCustomer }) {
@@ -117,9 +117,9 @@ export default function BookingsPage({ onEditCustomer }) {
     try {
       let error;
       if (editingBooking) {
-        ({ error } = await supabase.from('bookings').update(dataToSave).eq('id', editingBooking.id));
+        ({ error } = await db.collection('bookings').update(dataToSave).eq('id', editingBooking.id));
       } else {
-        ({ error } = await supabase.from('bookings').insert([dataToSave]));
+        ({ error } = await db.collection('bookings').insert([dataToSave]));
       }
       if (error) throw error;
 
@@ -134,7 +134,7 @@ export default function BookingsPage({ onEditCustomer }) {
   const handleDeleteBooking = async (id) => {
     if (!window.confirm('정말로 이 예약을 삭제하시겠습니까?')) return;
     try {
-      const { error } = await supabase.from('bookings').delete().eq('id', id);
+      const { error } = await db.collection('bookings').delete().eq('id', id);
       if (error) throw error;
       toast({ title: '삭제 완료' });
       await fetchBookings();

@@ -7,7 +7,7 @@ import MobileHeader from '@/components/MobileHeader';
 import { Button } from '@/components/ui/button';
 import CustomerDialog from '@/components/customers/CustomerDialog';
 import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/FirebaseAuthContext';
 
 export const manageTransactions = async (customerId, currentCustomerData, userId, toast) => {
@@ -77,14 +77,14 @@ export const manageTransactions = async (customerId, currentCustomerData, userId
   }
 
   if (transactionIdsToDelete.length > 0) {
-      const { error: deleteError } = await supabase.from('transactions').delete().in('id', transactionIdsToDelete);
+      const { error: deleteError } = await db.collection('transactions').delete().in('id', transactionIdsToDelete);
       if (deleteError && toast) {
           toast({ variant: "destructive", title: "기존 거래내역 삭제 실패", description: deleteError.message });
       }
   }
 
   if (transactionsToUpsert.length > 0) {
-    const { error: upsertError } = await supabase.from('transactions').upsert(transactionsToUpsert, { onConflict: 'id' });
+    const { error: upsertError } = await db.collection('transactions').upsert(transactionsToUpsert, { onConflict: 'id' });
     if (upsertError && toast) {
       toast({
         variant: "destructive",
@@ -108,8 +108,8 @@ export default function Layout({ children, editingCustomer, isCustomerDialogOpen
     if (!user) return;
     try {
       const [productsRes, filmingTypesRes] = await Promise.all([
-        supabase.from('products').select('*').eq('user_id', user.id),
-        supabase.from('filming_types').select('*').eq('user_id', user.id)
+        db.collection('products').select('*').eq('user_id', user.id),
+        db.collection('filming_types').select('*').eq('user_id', user.id)
       ]);
       if (productsRes.error) throw productsRes.error;
       if (filmingTypesRes.error) throw filmingTypesRes.error;
@@ -149,7 +149,7 @@ export default function Layout({ children, editingCustomer, isCustomerDialogOpen
         customerToSave.id = editingCustomer.id;
     }
 
-    const { data, error } = await supabase.from('customers').upsert(customerToSave).select().single();
+    const { data, error } = await db.collection('customers').upsert(customerToSave).select().single();
 
     if (error) {
         toast({ variant: "destructive", title: "저장 실패", description: error.message });
@@ -162,7 +162,7 @@ export default function Layout({ children, editingCustomer, isCustomerDialogOpen
         // Create booking if booking date and time are provided (new customer only)
         if (isNewCustomer && bookingDate && bookingTime && filmingTypeId) {
           try {
-            const { error: bookingError } = await supabase.from('bookings').insert([{
+            const { error: bookingError } = await db.collection('bookings').insert([{
               user_id: user.id,
               customer_id: data.id,
               customer_name: data.name,
@@ -193,7 +193,7 @@ export default function Layout({ children, editingCustomer, isCustomerDialogOpen
               memo: deliveryMemo
             });
             
-            const { error: deliveryError } = await supabase.from('bookings').insert([{
+            const { error: deliveryError } = await db.collection('bookings').insert([{
               user_id: user.id,
               customer_id: data.id,
               customer_name: data.name,

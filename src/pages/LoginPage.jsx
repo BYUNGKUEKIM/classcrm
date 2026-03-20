@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/FirebaseAuthContext';
 import { toast } from '@/components/ui/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { supabase } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 
 
 function FindCredentialsDialog({ open, onOpenChange }) {
@@ -20,7 +20,7 @@ function FindCredentialsDialog({ open, onOpenChange }) {
     e.preventDefault();
     setIsLoading(true);
     
-    const { error } = await supabase.auth.resetPasswordForEmail(resetPasswordEmail, {
+    const { error } = await auth.sendPasswordResetEmail(resetPasswordEmail, {
       redirectTo: `${window.location.origin}/password-reset`,
     });
 

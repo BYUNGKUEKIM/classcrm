@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/FirebaseAuthContext';
 
 function ProductDialog({ isOpen, onClose, onSave, product }) {
@@ -120,7 +120,7 @@ export default function ProductsPage() {
   const handleDeleteProduct = async (id) => {
     if (window.confirm('정말 삭제하시겠습니까?')) {
       try {
-        const { error } = await supabase.from('products').delete().eq('id', id);
+        const { error } = await db.collection('products').delete().eq('id', id);
         if (error) throw error;
         fetchProducts();
         toast({ title: "상품 삭제 완료", variant: "destructive" });

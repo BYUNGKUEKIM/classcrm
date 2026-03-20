@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/FirebaseAuthContext';
-import { supabase } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -56,8 +56,8 @@ export default function SettingsPage() {
         setLoading(true);
         try {
             const [productsRes, filmingTypesRes] = await Promise.all([
-                supabase.from('products').select('*').eq('user_id', user.id).order('name'),
-                supabase.from('filming_types').select('*').eq('user_id', user.id).order('name')
+                db.collection('products').select('*').eq('user_id', user.id).order('name'),
+                db.collection('filming_types').select('*').eq('user_id', user.id).order('name')
             ]);
             if (productsRes.error) throw productsRes.error;
             if (filmingTypesRes.error) throw filmingTypesRes.error;
@@ -99,7 +99,7 @@ export default function SettingsPage() {
         const dataToSave = { ...productFormData, user_id: user.id, price: parseFloat(productFormData.price) };
         if (editingProduct?.id) dataToSave.id = editingProduct.id;
 
-        const { error } = await supabase.from('products').upsert(dataToSave);
+        const { error } = await db.collection('products').upsert(dataToSave);
         if (error) toast({ variant: 'destructive', title: '저장 실패', description: error.message });
         else {
             toast({ title: '저장 완료' });
@@ -115,7 +115,7 @@ export default function SettingsPage() {
         const dataToSave = { ...filmingTypeFormData, user_id: user.id, price: parseFloat(filmingTypeFormData.price) };
         if (editingFilmingType?.id) dataToSave.id = editingFilmingType.id;
 
-        const { error } = await supabase.from('filming_types').upsert(dataToSave);
+        const { error } = await db.collection('filming_types').upsert(dataToSave);
         if (error) toast({ variant: 'destructive', title: '저장 실패', description: error.message });
         else {
             toast({ title: '저장 완료' });
@@ -140,7 +140,7 @@ export default function SettingsPage() {
 
     const handleDelete = async (table, id) => {
         if (!window.confirm('정말 삭제하시겠습니까?')) return;
-        const { error } = await supabase.from(table).delete().eq('id', id);
+        const { error } = await db.collection(table).delete().eq('id', id);
         if (error) toast({ variant: 'destructive', title: '삭제 실패', description: error.message });
         else {
             toast({ title: '삭제 완료' });
@@ -192,7 +192,7 @@ export default function SettingsPage() {
                 const CHUNK_SIZE = 50;
                 for (let i = 0; i < customersToInsert.length; i += CHUNK_SIZE) {
                     const chunk = customersToInsert.slice(i, i + CHUNK_SIZE);
-                    const { data: insertedCustomers, error } = await supabase.from('customers').insert(chunk).select();
+                    const { data: insertedCustomers, error } = await db.collection('customers').insert(chunk).select();
                     if (error) throw new Error(`고객 데이터 일괄 입력 실패: ${error.message}`);
                     for(const c of insertedCustomers) await manageTransactions(c.id, c, user.id);
                     setProgress(Math.round(((i + chunk.length) / customersToInsert.length) * 100));
@@ -217,13 +217,13 @@ export default function SettingsPage() {
         setIsProcessing(true);
         setProgress(0);
         try {
-            const { data: customers, error: customerError } = await supabase.from('customers').select('*').eq('user_id', user.id);
+            const { data: customers, error: customerError } = await db.collection('customers').select('*').eq('user_id', user.id);
             if (customerError) throw customerError;
             if (!customers || customers.length === 0) {
                 toast({ title: '알림', description: '정산할 고객 데이터가 없습니다.' });
                 return;
             }
-            await supabase.from('transactions').delete().eq('user_id', user.id).in('category', ['선금', '잔금']);
+            await db.collection('transactions').delete().eq('user_id', user.id).in('category', ['선금', '잔금']);
             for (let i = 0; i < customers.length; i++) {
                 await manageTransactions(customers[i].id, customers[i], user.id);
                 setProgress(Math.round(((i + 1) / customers.length) * 100));

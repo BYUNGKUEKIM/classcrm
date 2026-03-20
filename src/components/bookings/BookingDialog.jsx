@@ -8,7 +8,7 @@ import { Plus, Check } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { supabase } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/FirebaseAuthContext';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -60,7 +60,7 @@ export default function BookingDialog({ isOpen, onClose, onSave, booking, initia
   const fetchFilmingTypes = useCallback(async () => {
       if (!user) return;
       try {
-        const { data: filmingTypeData, error: filmingTypeError } = await supabase.from('filming_types').select('id, name, price').eq('user_id', user.id);
+        const { data: filmingTypeData, error: filmingTypeError } = await db.collection('filming_types').select('id, name, price').eq('user_id', user.id);
         if (filmingTypeError) throw filmingTypeError;
         setFilmingTypes(filmingTypeData || []);
       } catch (error) {
@@ -71,7 +71,7 @@ export default function BookingDialog({ isOpen, onClose, onSave, booking, initia
   const fetchProducts = useCallback(async () => {
     if (!user) return;
     try {
-      const { data, error } = await supabase.from('products').select('*').eq('user_id', user.id);
+      const { data, error } = await db.collection('products').select('*').eq('user_id', user.id);
       if (error) throw error;
       setProducts(data || []);
     } catch (error) {
@@ -298,7 +298,7 @@ export default function BookingDialog({ isOpen, onClose, onSave, booking, initia
       customerToSave.id = editingCustomer.id;
     }
 
-    const { data, error } = await supabase.from('customers').upsert(customerToSave).select().single();
+    const { data, error } = await db.collection('customers').upsert(customerToSave).select().single();
 
     if (error) {
       toast({ variant: "destructive", title: "저장 실패", description: error.message });
