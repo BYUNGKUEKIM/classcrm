@@ -36,16 +36,28 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
       {/* Language Toggle - Top Right */}
       <Button
-        variant="ghost"
+        variant="outline"
         size="sm"
-        onClick={toggleLanguage}
-        className="fixed top-4 right-4 z-50"
+        onClick={() => {
+          console.log('Current language:', language);
+          toggleLanguage();
+        }}
+        className="fixed top-4 right-4 z-50 bg-white"
       >
         <Globe className="h-4 w-4 mr-2" />
-        {language === 'ko' ? 'English' : '한국어'}
+        <span className="font-semibold">
+          {language === 'ko' ? 'EN' : 'KO'}
+        </span>
       </Button>
 
       <div className="w-full max-w-md">
+        {/* Language Indicator */}
+        <div className="text-center mb-2">
+          <span className="text-xs text-gray-500">
+            Current: {language === 'ko' ? '한국어' : 'English'}
+          </span>
+        </div>
+
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-full mb-4">

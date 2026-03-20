@@ -114,11 +114,19 @@ export default function Layout() {
             {/* Language Toggle */}
             <Button
               variant="outline"
-              className="w-full justify-start"
-              onClick={toggleLanguage}
+              className="w-full justify-between"
+              onClick={() => {
+                console.log('Layout: Current language:', language);
+                toggleLanguage();
+              }}
             >
-              <Globe className="h-4 w-4 mr-2" />
-              {language === 'ko' ? 'English' : '한국어'}
+              <div className="flex items-center">
+                <Globe className="h-4 w-4 mr-2" />
+                <span>{language === 'ko' ? '한국어' : 'English'}</span>
+              </div>
+              <span className="text-xs text-gray-500">
+                {language === 'ko' ? '→ EN' : '→ KO'}
+              </span>
             </Button>
             
             <div className="flex items-center gap-3 px-3 py-2">

@@ -23,7 +23,11 @@ export function LanguageProvider({ children }) {
   }, [language]);
 
   const toggleLanguage = () => {
-    setLanguage(prev => prev === 'ko' ? 'en' : 'ko');
+    setLanguage(prev => {
+      const newLang = prev === 'ko' ? 'en' : 'ko';
+      console.log('Language changing from', prev, 'to', newLang);
+      return newLang;
+    });
   };
 
   const t = (key) => {
