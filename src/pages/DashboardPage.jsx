@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,6 +21,7 @@ import { useNavigate } from 'react-router-dom';
 
 export default function DashboardPage() {
   const { user, profile } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalLeads: 0,
@@ -137,10 +139,10 @@ export default function DashboardPage() {
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
-                Welcome back, {profile?.studioName || 'there'}! 👋
+                {t('welcomeMessage')}, {profile?.studioName || 'there'}! 👋
               </h1>
               <p className="text-gray-600 mt-1">
-                Here's what's happening with your studio today
+                {t('todayActivity')}
               </p>
             </div>
           </div>
@@ -152,28 +154,28 @@ export default function DashboardPage() {
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <StatCard
-            title="Total Leads"
+            title={t('totalLeads')}
             value={stats.totalLeads}
             icon={Users}
             color="blue"
             onClick={() => navigate('/leads')}
           />
           <StatCard
-            title="Active Jobs"
+            title={t('activeJobs')}
             value={stats.activeJobs}
             icon={Briefcase}
             color="green"
             onClick={() => navigate('/jobs')}
           />
           <StatCard
-            title="Monthly Revenue"
+            title={t('monthlyRevenue')}
             value={`₩${stats.monthlyRevenue.toLocaleString()}`}
             icon={DollarSign}
             color="purple"
             onClick={() => navigate('/payments')}
           />
           <StatCard
-            title="Upcoming Shoots"
+            title={t('upcomingShoots')}
             value={stats.upcomingBookings}
             icon={Calendar}
             color="orange"
@@ -184,31 +186,31 @@ export default function DashboardPage() {
         {/* Quick Actions */}
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
+            <CardTitle>{t('quickActions')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <QuickAction
                 icon={Plus}
-                label="New Lead"
+                label={t('newLead')}
                 onClick={() => navigate('/leads?action=new')}
                 color="blue"
               />
               <QuickAction
                 icon={Briefcase}
-                label="Create Job"
+                label={t('createJob')}
                 onClick={() => navigate('/jobs?action=new')}
                 color="green"
               />
               <QuickAction
                 icon={Users}
-                label="Add Client"
+                label={t('addClient')}
                 onClick={() => navigate('/clients?action=new')}
                 color="purple"
               />
               <QuickAction
                 icon={DollarSign}
-                label="Record Payment"
+                label={t('recordPayment')}
                 onClick={() => navigate('/payments?action=new')}
                 color="orange"
               />
@@ -222,16 +224,16 @@ export default function DashboardPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                <span>Recent Activity</span>
+                <span>{t('recentActivity')}</span>
                 <Button variant="ghost" size="sm" onClick={() => navigate('/activity')}>
-                  View All <ArrowRight className="h-4 w-4 ml-2" />
+                  {t('viewAll')} <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {loading ? (
-                  <p className="text-center text-gray-500 py-8">Loading...</p>
+                  <p className="text-center text-gray-500 py-8">{t('loading')}</p>
                 ) : recentActivity.length > 0 ? (
                   recentActivity.map((activity, idx) => (
                     <div key={idx} className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-lg">
@@ -245,9 +247,9 @@ export default function DashboardPage() {
                   ))
                 ) : (
                   <div className="text-center py-8">
-                    <p className="text-gray-500">No recent activity</p>
+                    <p className="text-gray-500">{t('noRecentActivity')}</p>
                     <p className="text-sm text-gray-400 mt-1">
-                      Start by adding a new lead or job
+                      {t('noRecentActivity')}
                     </p>
                   </div>
                 )}
@@ -259,9 +261,9 @@ export default function DashboardPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                <span>Upcoming Tasks</span>
+                <span>{t('upcomingTasks')}</span>
                 <Button variant="ghost" size="sm" onClick={() => navigate('/tasks')}>
-                  View All <ArrowRight className="h-4 w-4 ml-2" />
+                  {t('viewAll')} <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
               </CardTitle>
             </CardHeader>
@@ -269,9 +271,9 @@ export default function DashboardPage() {
               <div className="space-y-4">
                 <div className="text-center py-8">
                   <Clock className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500">No upcoming tasks</p>
+                  <p className="text-gray-500">{t('noUpcomingTasks')}</p>
                   <p className="text-sm text-gray-400 mt-1">
-                    All clear! You're all caught up
+                    {t('allClear')}
                   </p>
                 </div>
               </div>

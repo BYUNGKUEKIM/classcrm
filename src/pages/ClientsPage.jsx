@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { db } from '@/lib/firebase';
 import { 
   collection, 
@@ -28,6 +29,7 @@ import {
 
 export default function ClientsPage() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -161,7 +163,7 @@ export default function ClientsPage() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
             <Input
               type="text"
-              placeholder="Search clients..."
+              placeholder={t("searchClients")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
