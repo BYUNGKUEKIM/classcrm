@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { 
   LayoutDashboard, 
@@ -10,13 +11,15 @@ import {
   LogOut,
   Menu,
   X,
-  Camera
+  Camera,
+  Globe
 } from 'lucide-react';
 
 export default function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, profile, signOut } = useAuth();
+  const { language, toggleLanguage, t } = useLanguage();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleSignOut = async () => {
@@ -29,10 +32,10 @@ export default function Layout() {
   };
 
   const navItems = [
-    { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/leads', icon: Users, label: 'Leads' },
-    { path: '/jobs', icon: Briefcase, label: 'Jobs' },
-    { path: '/clients', icon: UserCircle, label: 'Clients' },
+    { path: '/dashboard', icon: LayoutDashboard, label: t('dashboard') },
+    { path: '/leads', icon: Users, label: t('leads') },
+    { path: '/jobs', icon: Briefcase, label: t('jobs') },
+    { path: '/clients', icon: UserCircle, label: t('clients') },
   ];
 
   const isActive = (path) => location.pathname === path;
@@ -107,8 +110,18 @@ export default function Layout() {
           </nav>
 
           {/* User Section */}
-          <div className="p-4 border-t">
-            <div className="flex items-center gap-3 px-3 py-2 mb-2">
+          <div className="p-4 border-t space-y-2">
+            {/* Language Toggle */}
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              onClick={toggleLanguage}
+            >
+              <Globe className="h-4 w-4 mr-2" />
+              {language === 'ko' ? 'English' : '한국어'}
+            </Button>
+            
+            <div className="flex items-center gap-3 px-3 py-2">
               <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
                 <UserCircle className="h-6 w-6 text-gray-600" />
               </div>
@@ -117,7 +130,7 @@ export default function Layout() {
                   {user?.email}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {typeof profile?.subscription === 'string' ? profile.subscription : 'Trial'}
+                  {typeof profile?.subscription === 'string' ? t(profile.subscription.toLowerCase()) : t('trial')}
                 </p>
               </div>
             </div>
@@ -127,7 +140,7 @@ export default function Layout() {
               onClick={handleSignOut}
             >
               <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
+              {t('logout')}
             </Button>
           </div>
         </div>

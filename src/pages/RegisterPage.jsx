@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Camera, AlertCircle, CheckCircle } from 'lucide-react';
+import { Camera, AlertCircle, CheckCircle, Globe } from 'lucide-react';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
   const { signUp } = useAuth();
+  const { language, toggleLanguage, t } = useLanguage();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -31,17 +33,17 @@ export default function RegisterPage() {
 
     // Validation
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      setError(t('passwordMismatch'));
       return;
     }
 
     if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
+      setError(t('passwordTooShort'));
       return;
     }
 
     if (!formData.studioName.trim()) {
-      setError('Studio name is required');
+      setError(t('studioNameRequired'));
       return;
     }
 
@@ -64,21 +66,34 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center p-4">
+      {/* Language Toggle - Top Right */}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={toggleLanguage}
+        className="fixed top-4 right-4 z-50"
+      >
+        <Globe className="h-4 w-4 mr-2" />
+        {language === 'ko' ? 'English' : '한국어'}
+      </Button>
+
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-purple-600 rounded-full mb-4">
             <Camera className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">Get Started Free</h1>
-          <p className="text-gray-600 mt-2">Start managing your studio in minutes</p>
+          <h1 className="text-3xl font-bold text-gray-900">{t('signUpFree')}</h1>
+          <p className="text-gray-600 mt-2">
+            {language === 'ko' ? '몇 분 안에 스튜디오 관리 시작하기' : 'Start managing your studio in minutes'}
+          </p>
         </div>
 
         {/* Register Card */}
         <Card>
           <CardHeader>
-            <CardTitle>Create Your Account</CardTitle>
-            <CardDescription>7-day free trial • No credit card required</CardDescription>
+            <CardTitle>{language === 'ko' ? '계정 만들기' : 'Create Your Account'}</CardTitle>
+            <CardDescription>{t('freeTrial')} • {t('noCreditCard')}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -90,11 +105,11 @@ export default function RegisterPage() {
               )}
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Studio Name</label>
+                <label className="text-sm font-medium text-gray-700">{t('studioName')}</label>
                 <Input
                   type="text"
                   name="studioName"
-                  placeholder="My Photography Studio"
+                  placeholder={language === 'ko' ? '내 포토 스튜디오' : 'My Photography Studio'}
                   value={formData.studioName}
                   onChange={handleChange}
                   required
@@ -103,7 +118,7 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Email</label>
+                <label className="text-sm font-medium text-gray-700">{t('email')}</label>
                 <Input
                   type="email"
                   name="email"
@@ -116,7 +131,7 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Password</label>
+                <label className="text-sm font-medium text-gray-700">{t('password')}</label>
                 <Input
                   type="password"
                   name="password"
@@ -126,11 +141,11 @@ export default function RegisterPage() {
                   required
                   disabled={loading}
                 />
-                <p className="text-xs text-gray-500">Minimum 6 characters</p>
+                <p className="text-xs text-gray-500">{t('minimumSixChars')}</p>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Confirm Password</label>
+                <label className="text-sm font-medium text-gray-700">{t('confirmPassword')}</label>
                 <Input
                   type="password"
                   name="confirmPassword"
@@ -147,7 +162,7 @@ export default function RegisterPage() {
                 className="w-full bg-purple-600 hover:bg-purple-700"
                 disabled={loading}
               >
-                {loading ? 'Creating Account...' : 'Create Account'}
+                {loading ? t('creatingAccount') : (language === 'ko' ? '계정 만들기' : 'Create Account')}
               </Button>
             </form>
 
@@ -155,23 +170,23 @@ export default function RegisterPage() {
             <div className="mt-6 space-y-2">
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <CheckCircle className="h-4 w-4 text-green-500" />
-                <span>Free 7-day trial</span>
+                <span>{t('freeTrial')}</span>
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <CheckCircle className="h-4 w-4 text-green-500" />
-                <span>No credit card required</span>
+                <span>{t('noCreditCard')}</span>
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <CheckCircle className="h-4 w-4 text-green-500" />
-                <span>Cancel anytime</span>
+                <span>{t('cancelAnytime')}</span>
               </div>
             </div>
 
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
-                Already have an account?{' '}
+                {t('alreadyHaveAccount')}{' '}
                 <Link to="/login" className="text-purple-600 hover:text-purple-700 font-medium">
-                  Sign in
+                  {t('signIn')}
                 </Link>
               </p>
             </div>
@@ -180,7 +195,7 @@ export default function RegisterPage() {
 
         {/* Footer */}
         <div className="mt-8 text-center text-sm text-gray-600">
-          <p>© 2026 Photo Studio CRM. All rights reserved.</p>
+          <p>© 2026 Photo Studio CRM. {t('allRightsReserved')}.</p>
         </div>
       </div>
     </div>
