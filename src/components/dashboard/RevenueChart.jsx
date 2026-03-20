@@ -20,7 +20,7 @@ export default function RevenueChart() {
       sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
       sixMonthsAgo.setDate(1);
 
-      const { data, error } = await supabase
+      const { data, error } = await db.collection
         .from('transactions')
         .select('transaction_date, amount')
         .eq('user_id', user.id)
@@ -63,7 +63,7 @@ export default function RevenueChart() {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      db.removeChannel(channel);
     };
   }, [fetchRevenueData]);
   

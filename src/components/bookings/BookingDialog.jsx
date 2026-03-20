@@ -83,7 +83,7 @@ export default function BookingDialog({ isOpen, onClose, onSave, booking, initia
     if (!user) return;
     setCustomerLoading(true);
     try {
-        const { data: customerData, error: customerError } = await supabase
+        const { data: customerData, error: customerError } = await db.collection
           .from('customers')
           .select('id, name, phone, email, created_at, filming_type_id, total_cost, notes, transaction_date')
           .eq('user_id', user.id)
@@ -120,7 +120,7 @@ export default function BookingDialog({ isOpen, onClose, onSave, booking, initia
 
     setIsSearchingCustomers(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await db.collection
         .from('customers')
         .select('id, name, phone, email, created_at, filming_type_id, total_cost, notes, transaction_date')
         .eq('user_id', user.id)
@@ -257,7 +257,7 @@ export default function BookingDialog({ isOpen, onClose, onSave, booking, initia
     if (!user) return;
     try {
       if (customer?.id) {
-        const { data, error } = await supabase
+        const { data, error } = await db.collection
           .from('customers')
           .select('*')
           .eq('id', customer.id)

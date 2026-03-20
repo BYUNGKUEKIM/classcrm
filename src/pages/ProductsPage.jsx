@@ -72,7 +72,7 @@ export default function ProductsPage() {
     if (!user) return;
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await db.collection
         .from('products')
         .select('*')
         .eq('user_id', user.id)
@@ -95,7 +95,7 @@ export default function ProductsPage() {
     try {
       if (editingProduct) {
         // Update
-        const { error } = await supabase
+        const { error } = await db.collection
           .from('products')
           .update(productData)
           .eq('id', editingProduct.id);
@@ -103,7 +103,7 @@ export default function ProductsPage() {
         toast({ title: "상품 수정 완료" });
       } else {
         // Create
-        const { error } = await supabase
+        const { error } = await db.collection
           .from('products')
           .insert({ ...productData, user_id: user.id });
         if (error) throw error;

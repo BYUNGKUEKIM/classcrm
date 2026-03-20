@@ -26,7 +26,7 @@ export default function FinancePage({ onEditCustomer }) {
     const end = endOfMonth(currentDate);
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await db.collection
         .from('transactions')
         .select('*, customers ( id, name )')
         .eq('user_id', user.id)
@@ -111,7 +111,7 @@ export default function FinancePage({ onEditCustomer }) {
       return;
     }
 
-    const { data: customer, error } = await supabase
+    const { data: customer, error } = await db.collection
       .from('customers')
       .select('*')
       .eq('id', customerId)

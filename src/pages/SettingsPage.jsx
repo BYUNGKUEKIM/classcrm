@@ -80,7 +80,7 @@ export default function SettingsPage() {
     const handleProfileUpdate = async (e) => {
         e.preventDefault();
         setLoading(true);
-        const { error } = await supabase
+        const { error } = await db.collection
             .from('profiles')
             .update({ studio_name: studioName, owner_name: ownerName, phone_number: phoneNumber })
             .eq('id', user.id);
@@ -250,7 +250,7 @@ export default function SettingsPage() {
     const handleDownloadData = async () => {
         setLoading(true);
         try {
-            const { data: customers, error } = await supabase
+            const { data: customers, error } = await db.collection
                 .from('customers')
                 .select('name,phone,email,notes,total_cost,deposit,transaction_date,created_at')
                 .eq('user_id', user.id)

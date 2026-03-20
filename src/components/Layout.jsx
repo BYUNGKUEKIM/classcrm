@@ -20,7 +20,7 @@ export const manageTransactions = async (customerId, currentCustomerData, userId
   const transactionDate = currentCustomerData.transaction_date || (currentCustomerData.created_at ? new Date(currentCustomerData.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
 
 
-  const { data: existingTransactions, error: fetchError } = await supabase
+  const { data: existingTransactions, error: fetchError } = await db.collection
     .from('transactions')
     .select('id, category')
     .eq('user_id', userId)

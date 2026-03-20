@@ -49,7 +49,7 @@ export default function AdminPage() {
   const loadUsers = useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.rpc('get_all_users');
+      const { data, error } = await db.collection.rpc('get_all_users');
 
       if (error) {
         throw error;
@@ -73,7 +73,7 @@ export default function AdminPage() {
 
   const handleStatusChange = async (userId, newStatus) => {
     try {
-      const { error } = await supabase
+      const { error } = await db.collection
         .from('profiles')
         .update({ status: newStatus })
         .eq('id', userId);
@@ -98,7 +98,7 @@ export default function AdminPage() {
   
   const handleSubscriptionChange = async (userId, newSubscription) => {
     try {
-        const { error } = await supabase
+        const { error } = await db.collection
             .from('profiles')
             .update({ subscription_plan: newSubscription })
             .eq('id', userId);
@@ -124,7 +124,7 @@ export default function AdminPage() {
   const handleDeleteUser = async (userId) => {
       if (window.confirm('정말 이 사용자를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
           try {
-              const { error } = await supabase.rpc('delete_user_by_id', { user_id_to_delete: userId });
+              const { error } = await db.collection.rpc('delete_user_by_id', { user_id_to_delete: userId });
               if (error) throw error;
               
               setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));

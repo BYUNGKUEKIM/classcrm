@@ -24,7 +24,7 @@ export default function BookingsPage({ onEditCustomer }) {
     if (!user) return;
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await db.collection
         .from('bookings')
         .select(`
           id,
@@ -91,7 +91,7 @@ export default function BookingsPage({ onEditCustomer }) {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      db.removeChannel(channel);
     };
   }, [fetchBookings]);
 

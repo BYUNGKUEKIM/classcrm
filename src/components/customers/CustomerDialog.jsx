@@ -102,7 +102,7 @@ export default function CustomerDialog({ isOpen, onClose, onSave, customer, prod
     if (!user || !customerId) return;
     setVisitLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await db.collection
         .from('transactions')
         .select('id, transaction_date, amount, description, payment_method, created_at')
         .eq('user_id', user.id)
@@ -216,7 +216,7 @@ export default function CustomerDialog({ isOpen, onClose, onSave, customer, prod
 
       if (insertError) throw insertError;
 
-      const { error: updateError } = await supabase
+      const { error: updateError } = await db.collection
         .from('customers')
         .update({
           transaction_date: targetDate,
@@ -260,7 +260,7 @@ export default function CustomerDialog({ isOpen, onClose, onSave, customer, prod
     if (!newDate) return;
     setUpdatingVisitId(visitId);
     try {
-      const { error } = await supabase
+      const { error } = await db.collection
         .from('transactions')
         .update({ transaction_date: newDate })
         .eq('id', visitId)
@@ -285,7 +285,7 @@ export default function CustomerDialog({ isOpen, onClose, onSave, customer, prod
     if (!window.confirm('이 촬영 매출 기록을 삭제하시겠습니까?')) return;
     setDeletingVisitId(visitId);
     try {
-      const { error } = await supabase
+      const { error } = await db.collection
         .from('transactions')
         .delete()
         .eq('id', visitId)

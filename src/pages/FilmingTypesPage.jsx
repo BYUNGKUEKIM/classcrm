@@ -72,7 +72,7 @@ export default function FilmingTypesPage() {
     if (!user) return;
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await db.collection
         .from('filming_types')
         .select('*')
         .eq('user_id', user.id)
@@ -94,14 +94,14 @@ export default function FilmingTypesPage() {
   const handleSave = async (data) => {
     try {
       if (editingFilmingType) {
-        const { error } = await supabase
+        const { error } = await db.collection
           .from('filming_types')
           .update(data)
           .eq('id', editingFilmingType.id);
         if (error) throw error;
         toast({ title: "촬영 유형 수정 완료" });
       } else {
-        const { error } = await supabase
+        const { error } = await db.collection
           .from('filming_types')
           .insert({ ...data, user_id: user.id });
         if (error) throw error;
