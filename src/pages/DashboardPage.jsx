@@ -53,20 +53,21 @@ export default function DashboardPage() {
         return created && created >= monthStart;
       }).length;
 
-      // 예약 통계
+      // 예약 통계 (인덱스 없이)
       const bookingsRef = collection(db, 'bookings');
-      const todayBookingsQuery = query(
+      const simpleBookingsQuery = query(
         bookingsRef, 
-        where('userId', '==', user.uid),
-        where('booking_date', '>=', todayStr)
+        where('userId', '==', user.uid)
       );
-      const bookingsSnap = await getDocs(todayBookingsQuery);
+      const bookingsSnap = await getDocs(simpleBookingsQuery);
       
       const todayBookings = bookingsSnap.docs.filter(doc => 
         doc.data().booking_date === todayStr
       ).length;
       
-      const upcomingBookings = bookingsSnap.size;
+      const upcomingBookings = bookingsSnap.docs.filter(doc =>
+        doc.data().booking_date >= todayStr
+      ).length;
 
       // 매출 통계
       const transactionsRef = collection(db, 'transactions');
@@ -100,50 +101,55 @@ export default function DashboardPage() {
         ? ((monthlyRevenue - lastMonthRevenue) / lastMonthRevenue) * 100 
         : 0;
 
-      // 최근 활동
+      // 최근 활동 (간단한 쿼리)
       const recentBookingsQuery = query(
         bookingsRef,
         where('userId', '==', user.uid),
-        orderBy('createdAt', 'desc'),
-        limit(5)
+        limit(20)
       );
       const recentBookingsSnap = await getDocs(recentBookingsQuery);
       
-      const activities = recentBookingsSnap.docs.map(doc => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          type: 'booking',
-          title: `${data.customerName || '고객'}님 예약`,
-          description: `${data.filmingType || '촬영'} - ${data.booking_date}`,
-          time: data.createdAt?.toDate(),
-          icon: Calendar,
-          color: 'blue'
-        };
-      });
+      const activities = recentBookingsSnap.docs
+        .sort((a, b) => {
+          const aTime = a.data().createdAt?.toMillis() || 0;
+          const bTime = b.data().createdAt?.toMillis() || 0;
+          return bTime - aTime;
+        })
+        .slice(0, 5)
+        .map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            type: 'booking',
+            title: `${data.customerName || '고객'}님 예약`,
+            description: `${data.filmingType || '촬영'} - ${data.booking_date}`,
+            time: data.createdAt?.toDate(),
+            icon: Calendar,
+            color: 'blue'
+          };
+        });
 
       setRecentActivity(activities);
 
-      // 다가오는 이벤트
-      const upcomingQuery = query(
-        bookingsRef,
-        where('userId', '==', user.uid),
-        where('booking_date', '>=', todayStr),
-        orderBy('booking_date', 'asc'),
-        limit(5)
-      );
-      const upcomingSnap = await getDocs(upcomingQuery);
-      
-      const events = upcomingSnap.docs.map(doc => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          customerName: data.customerName || '고객',
-          date: data.booking_date,
-          time: data.booking_time || '시간 미정',
-          type: data.filmingType || '촬영'
-        };
-      });
+      // 다가오는 이벤트 (클라이언트 필터링)
+      const events = bookingsSnap.docs
+        .filter(doc => doc.data().booking_date >= todayStr)
+        .sort((a, b) => {
+          const aDate = a.data().booking_date || '';
+          const bDate = b.data().booking_date || '';
+          return aDate.localeCompare(bDate);
+        })
+        .slice(0, 5)
+        .map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            customerName: data.customerName || '고객',
+            date: data.booking_date,
+            time: data.booking_time || '시간 미정',
+            type: data.filmingType || '촬영'
+          };
+        });
 
       setUpcomingEvents(events);
 
