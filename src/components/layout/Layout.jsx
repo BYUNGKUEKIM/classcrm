@@ -117,7 +117,7 @@ export default function Layout() {
                   {user?.email}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {profile?.subscription || 'Trial'}
+                  {typeof profile?.subscription === 'string' ? profile.subscription : 'Trial'}
                 </p>
               </div>
             </div>
