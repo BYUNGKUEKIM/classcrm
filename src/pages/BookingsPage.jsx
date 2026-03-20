@@ -4,7 +4,7 @@ import { Plus, List, Calendar, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import BookingDialog from '@/components/bookings/BookingDialog';
 import BookingCalendar from '@/components/bookings/BookingCalendar';
-import BookingMonthlyCalendar from '@/components/bookings/BookingMonthlyCalendar';
+import BookingMonthlyCalendar from '@/components/bookings/BookingMonthlyCalendar.jsx';
 import BookingList from '@/components/bookings/BookingList';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
