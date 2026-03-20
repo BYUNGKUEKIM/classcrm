@@ -34,17 +34,7 @@ if (typeof window !== 'undefined' && import.meta.env.PROD) {
 }
 export { analytics };
 
-// 개발 환경에서 에뮬레이터 연결
-if (import.meta.env.DEV) {
-  try {
-    connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
-    connectFirestoreEmulator(db, 'localhost', 8080);
-    connectStorageEmulator(storage, 'localhost', 9199);
-    connectFunctionsEmulator(functions, 'localhost', 5001);
-    console.log('🔥 Firebase Emulators Connected');
-  } catch (error) {
-    console.log('Emulators not available, using production Firebase');
-  }
-}
+// 에뮬레이터 비활성화 - 실제 Firebase 사용
+console.log('🔥 Firebase Production Mode');
 
 export default app;
