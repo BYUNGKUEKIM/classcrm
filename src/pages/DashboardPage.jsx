@@ -69,33 +69,30 @@ export default function DashboardPage() {
         doc.data().booking_date >= todayStr
       ).length;
 
-      // 매출 통계
+      // 매출 통계 (간단한 쿼리)
       const transactionsRef = collection(db, 'transactions');
-      const currentMonthQuery = query(
+      const allTransactionsQuery = query(
         transactionsRef,
-        where('userId', '==', user.uid),
-        where('type', '==', 'income'),
-        where('date', '>=', monthStart)
+        where('userId', '==', user.uid)
       );
-      const currentMonthSnap = await getDocs(currentMonthQuery);
+      const allTransactionsSnap = await getDocs(allTransactionsQuery);
       
-      const monthlyRevenue = currentMonthSnap.docs.reduce((sum, doc) => {
-        return sum + (parseFloat(doc.data().amount) || 0);
-      }, 0);
+      // 클라이언트에서 필터링
+      const monthlyRevenue = allTransactionsSnap.docs
+        .filter(doc => {
+          const data = doc.data();
+          const txDate = data.date?.toDate();
+          return data.type === 'income' && txDate && txDate >= monthStart;
+        })
+        .reduce((sum, doc) => sum + (parseFloat(doc.data().amount) || 0), 0);
 
-      // 지난달 매출
-      const lastMonthQuery = query(
-        transactionsRef,
-        where('userId', '==', user.uid),
-        where('type', '==', 'income'),
-        where('date', '>=', lastMonthStart),
-        where('date', '<', monthStart)
-      );
-      const lastMonthSnap = await getDocs(lastMonthQuery);
-      
-      const lastMonthRevenue = lastMonthSnap.docs.reduce((sum, doc) => {
-        return sum + (parseFloat(doc.data().amount) || 0);
-      }, 0);
+      const lastMonthRevenue = allTransactionsSnap.docs
+        .filter(doc => {
+          const data = doc.data();
+          const txDate = data.date?.toDate();
+          return data.type === 'income' && txDate && txDate >= lastMonthStart && txDate < monthStart;
+        })
+        .reduce((sum, doc) => sum + (parseFloat(doc.data().amount) || 0), 0);
 
       const revenueGrowth = lastMonthRevenue > 0 
         ? ((monthlyRevenue - lastMonthRevenue) / lastMonthRevenue) * 100 
